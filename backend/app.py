@@ -5,6 +5,9 @@ import uuid
 from datetime import datetime
 
 from db import init_db, insert_job, update_job_result, get_job
+from feature_extractor import extract_features
+from predictor import predict_proba, load_model
+import numpy as np  # type: ignore
 
 app = Flask(__name__)
 CORS(app)
@@ -43,18 +46,48 @@ def analyze_video():
 		created_at = datetime.now().isoformat()
 		insert_job(job_id=job_id, filename=file.filename, filepath=filepath, status='processing', created_at=created_at)
 		
-		# TODO: Start background analysis process
-		# For hackathon demo, simulate processing immediately
-		mock_results = {
-			'authenticity_score': 85.2,
-			'confidence': 0.92,
-			'features': {
-				'blink_rate': 12.5,
-				'facial_jitter': 0.15,
-				'audio_mfcc_variance': 0.23
+		# Run synchronous analysis (can be moved to background worker later)
+		try:
+			features = extract_features(filepath)
+			vector = np.array(features.to_feature_vector(), dtype=float)
+			model = load_model()
+			prob_real, prob_fake = predict_proba(vector, model=model)
+			authenticity_score = float(prob_real * 100.0)
+
+			# Legacy demo fields expected by frontend dashboard
+			legacy_features = {
+				'blink_rate': (features.video.avg_blink_rate_per_minute if features.video else 0.0) or 0.0,
+				'facial_jitter': (features.video.facial_jitter_std_dev if features.video else 0.0) or 0.0,
+				'audio_mfcc_variance': (features.audio.audio_mfcc_std if features.audio else 0.0) or 0.0,
 			}
-		}
-		update_job_result(job_id, status='completed', results=mock_results)
+
+			# Human-readable summary
+			if authenticity_score >= 80.0:
+				summary_text = "This appears to be a real video."
+			else:
+				parts = []
+				if legacy_features['blink_rate'] < 10:
+					parts.append("low blink rate")
+				if legacy_features['facial_jitter'] >= 0.2:
+					parts.append("high facial jitter")
+				if legacy_features['audio_mfcc_variance'] >= 0.3:
+					parts.append("synthetic-sounding audio patterns")
+				reason = ", ".join(parts) if parts else "multiple subtle cues"
+				summary_text = f"Potential deepfake indicators: {reason}."
+
+			results = {
+				'authenticity_score': authenticity_score,
+				'confidence': float(max(prob_real, prob_fake)),
+				'probabilities': {
+					'real': prob_real,
+					'fake': prob_fake
+				},
+				'features': legacy_features,
+				'summary': summary_text,
+			}
+			update_job_result(job_id, status='completed', results=results)
+		except Exception as e:
+			update_job_result(job_id, status='failed', results={'error': str(e)})
 		
 		return jsonify({
 			'job_id': job_id,

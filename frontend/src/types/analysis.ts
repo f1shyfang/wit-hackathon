@@ -4,6 +4,7 @@ export interface AnalysisResult {
   results: {
     authenticity_score: number;
     confidence: number;
+    summary?: string;
     features: {
       blink_rate: number;
       facial_jitter: number;

@@ -67,6 +67,14 @@ pip install -r requirements.txt
 python app.py
 ```
 
+### Train the model (using your real/fake datasets)
+```bash
+cd backend
+# Quotes are needed for the space in the real dataset folder name
+python train_model.py "DFD_original sequences" DFD_manipulated_sequences
+# This writes backend/model.pkl
+```
+
 The application will be available at:
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:5000

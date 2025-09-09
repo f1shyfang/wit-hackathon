@@ -71,7 +71,7 @@ export default function AnalysisDashboard({ result, onNewAnalysis }: AnalysisDas
     );
   }
 
-  const { authenticity_score, confidence, features } = currentResult.results;
+  const { authenticity_score, confidence, features, summary } = currentResult.results as any;
 
   // Prepare data for charts
   const featureData = [
@@ -130,6 +130,16 @@ export default function AnalysisDashboard({ result, onNewAnalysis }: AnalysisDas
             Confidence: {(confidence * 100).toFixed(1)}%
           </p>
         </div>
+      </div>
+
+      {/* Summary Box */}
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">Summary</h3>
+        <p className="text-gray-700">
+          {authenticity_score >= 80
+            ? 'This appears to be a real video.'
+            : (summary || 'Potential deepfake indicators present.')}
+        </p>
       </div>
 
       {/* Charts Row */}
