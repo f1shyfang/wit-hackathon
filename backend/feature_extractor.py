@@ -76,6 +76,37 @@ class ExtractedFeatures:
 			"metadata": asdict(self.metadata) if self.metadata else None,
 		}
 
+	def to_feature_vector(self) -> List[float]:
+		"""
+		Return a stable, fixed-length numeric vector.
+		Order:
+		0: video.avg_blink_rate_per_minute (0 if None)
+		1: video.facial_jitter_std_dev (0 if None)
+		2: audio.audio_mfcc_mean (0 if None)
+		3: audio.audio_mfcc_std (0 if None)
+		4: metadata.duration_seconds (0 if None)
+		5: metadata.bit_rate (0 if None)
+		6: metadata.video_avg_fps (0 if None)
+		7: metadata.video_width (0 if None)
+		8: metadata.video_height (0 if None)
+		9: metadata.audio_sample_rate (0 if None)
+		"""
+		def g(x: Optional[float]) -> float:
+			return float(x) if x is not None else 0.0
+
+		return [
+			g(self.video.avg_blink_rate_per_minute) if self.video else 0.0,
+			g(self.video.facial_jitter_std_dev) if self.video else 0.0,
+			g(self.audio.audio_mfcc_mean) if self.audio else 0.0,
+			g(self.audio.audio_mfcc_std) if self.audio else 0.0,
+			g(self.metadata.duration_seconds) if self.metadata else 0.0,
+			float(self.metadata.bit_rate) if (self.metadata and self.metadata.bit_rate is not None) else 0.0,
+			g(self.metadata.video_avg_fps) if self.metadata else 0.0,
+			float(self.metadata.video_width) if (self.metadata and self.metadata.video_width is not None) else 0.0,
+			float(self.metadata.video_height) if (self.metadata and self.metadata.video_height is not None) else 0.0,
+			float(self.metadata.audio_sample_rate) if (self.metadata and self.metadata.audio_sample_rate is not None) else 0.0,
+		]
+
 
 # -----------------------------
 # Utility math helpers
@@ -356,17 +387,19 @@ if __name__ == "__main__":
 	parser.add_argument("video_path", help="Path to input video file")
 	parser.add_argument("--frame-stride", type=int, default=5, help="Analyze every Nth frame")
 	parser.add_argument("--blink-threshold", type=float, default=0.21, help="EAR threshold for blink detection")
+	parser.add_argument("--vector", action="store_true", help="Print only the numeric feature vector")
 	args = parser.parse_args()
 
 	if not os.path.exists(args.video_path):
 		raise SystemExit(f"File not found: {args.video_path}")
 
 	# Allow overriding defaults
-	def run() -> Dict:
-		video_stats = extract_video_features(args.video_path, frame_stride=args.frame_stride, ear_blink_threshold=args.blink_threshold)
-		audio_stats = extract_audio_features(args.video_path)
-		metadata_stats = extract_metadata_features(args.video_path)
-		return ExtractedFeatures(video=video_stats, audio=audio_stats, metadata=metadata_stats).to_dict()
+	video_stats = extract_video_features(args.video_path, frame_stride=args.frame_stride, ear_blink_threshold=args.blink_threshold)
+	audio_stats = extract_audio_features(args.video_path)
+	metadata_stats = extract_metadata_features(args.video_path)
+	features = ExtractedFeatures(video=video_stats, audio=audio_stats, metadata=metadata_stats)
 
-	features = run()
-	print(json.dumps(features, indent=2))
+	if args.vector:
+		print(json.dumps(features.to_feature_vector()))
+	else:
+		print(json.dumps(features.to_dict(), indent=2))

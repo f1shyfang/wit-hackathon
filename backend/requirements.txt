@@ -1,9 +1,12 @@
 Flask
 Flask-CORS
 python-dotenv
-
-
-
-cd /Users/mf/dev/wit-hackathon/backend
-pip install opencv-python mediapipe librosa ffmpeg-python numpy
-brew install ffmpeg   # if ffmpeg isn’t installed
+opencv-python
+mediapipe
+librosa
+ffmpeg-python
+numpy
+xgboost
+scikit-learn
+joblib
+pandas

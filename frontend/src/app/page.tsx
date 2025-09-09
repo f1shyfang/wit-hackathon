@@ -36,7 +36,7 @@ export default function Home() {
         {/* Main Content */}
         <div className="max-w-4xl mx-auto">
           {!analysisResult && !isAnalyzing && (
-            <FileUpload onAnalysisStart={handleAnalysisStart} />
+            <FileUpload onAnalysisStart={handleAnalysisStart} onAnalysisComplete={handleAnalysisComplete} />
           )}
           
           {isAnalyzing && (
