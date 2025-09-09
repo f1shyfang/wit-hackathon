@@ -4,6 +4,7 @@ import tempfile
 import json
 from dataclasses import dataclass, asdict
 from typing import Dict, List, Optional, Tuple, Any
+from collections import deque
 
 # Video
 try:
@@ -159,6 +160,12 @@ def extract_video_features(video_path: str, frame_stride: int = 5, ear_blink_thr
 	blinks = 0
 	frames_analyzed = 0
 
+	# Blink detection improvements: smoothed EAR, adaptive threshold, refractory period
+	ear_window = deque(maxlen=15)  # ~0.5s at 30fps; scales with stride implicitly
+	prev_ear_above = True
+	frames_since_last_blink = 9999
+	min_frames_between_blinks = max(2, int((fps / frame_stride) * 0.15))  # ~150ms refractory
+
 	frame_index = 0
 	while True:
 		ret, frame = cap.read()
@@ -184,16 +191,43 @@ def extract_video_features(video_path: str, frame_stride: int = 5, ear_blink_thr
 			right_eye = [get_xy(i) for i in RIGHT_EYE_IDX]
 			ear_left = eye_aspect_ratio(left_eye)
 			ear_right = eye_aspect_ratio(right_eye)
-			ear = (ear_left + ear_right) / 2.0
+			ear_raw = (ear_left + ear_right) / 2.0
+			# Smooth EAR using simple moving average
+			ear_window.append(ear_raw)
+			ear = float(sum(ear_window) / len(ear_window))
 
-			# Blink detection
-			if ear < ear_blink_threshold:
+			# Adaptive threshold using robust stats (median - 1.5 * MAD)
+			if len(ear_window) >= 5:
+				arr = np.array(ear_window, dtype=float)
+				med = float(np.median(arr))
+				mad = float(np.median(np.abs(arr - med))) or 0.0
+				adaptive_thr = max(ear_blink_threshold, med - 1.5 * mad)
+			else:
+				adaptive_thr = ear_blink_threshold
+
+			# Blink detection with edge-trigger and refractory period
+			is_below = ear < adaptive_thr
+			if prev_ear_above and is_below and frames_since_last_blink >= min_frames_between_blinks:
 				blinks += 1
+				frames_since_last_blink = 0
+			prev_ear_above = not is_below
+			frames_since_last_blink += 1
 
-			# Facial jitter via nose movement
+			# Facial jitter via nose movement, normalized by inter-ocular distance and smoothed
 			nose = get_xy(NOSE_TIP_IDX)
+			# Inter-ocular distance as scale (between eye centers)
+			left_center = ((left_eye[0][0] + left_eye[3][0]) / 2.0, (left_eye[0][1] + left_eye[3][1]) / 2.0)
+			right_center = ((right_eye[0][0] + right_eye[3][0]) / 2.0, (right_eye[0][1] + right_eye[3][1]) / 2.0)
+			scale = euclidean_distance(left_center, right_center) or 1.0
 			if prev_nose is not None:
-				jitter_distances.append(euclidean_distance(nose, prev_nose))
+				disp = euclidean_distance(nose, prev_nose) / scale
+				# Exponential smoothing to reduce noise
+				if jitter_distances:
+					alpha = 0.2
+					smoothed = alpha * disp + (1.0 - alpha) * jitter_distances[-1]
+					jitter_distances.append(smoothed)
+				else:
+					jitter_distances.append(disp)
 			prev_nose = nose
 
 			frames_analyzed += 1

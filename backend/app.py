@@ -61,19 +61,29 @@ def analyze_video():
 				'audio_mfcc_variance': (features.audio.audio_mfcc_std if features.audio else 0.0) or 0.0,
 			}
 
-			# Human-readable summary
-			if authenticity_score >= 80.0:
+			# Human-readable summary (less aggressive on jitter; require combined signals)
+			blink_low = legacy_features['blink_rate'] < 8.0
+			jitter_high = legacy_features['facial_jitter'] >= 0.35
+			audio_synth = legacy_features['audio_mfcc_variance'] >= 0.40
+
+			indicators = []
+			if blink_low:
+				indicators.append("low blink rate")
+			if jitter_high:
+				indicators.append("elevated facial motion jitter")
+			if audio_synth:
+				indicators.append("synthetic-sounding audio patterns")
+
+			# Declare real if classifier is confident OR there are no strong indicators
+			if authenticity_score >= 70.0 and len(indicators) <= 1:
 				summary_text = "This appears to be a real video."
 			else:
-				parts = []
-				if legacy_features['blink_rate'] < 10:
-					parts.append("low blink rate")
-				if legacy_features['facial_jitter'] >= 0.2:
-					parts.append("high facial jitter")
-				if legacy_features['audio_mfcc_variance'] >= 0.3:
-					parts.append("synthetic-sounding audio patterns")
-				reason = ", ".join(parts) if parts else "multiple subtle cues"
-				summary_text = f"Potential deepfake indicators: {reason}."
+				# Flag deepfake only when multiple indicators align
+				if len(indicators) >= 2 or authenticity_score < 60.0:
+					reason = ", ".join(indicators) if indicators else "model confidence is low"
+					summary_text = f"Potential deepfake indicators: {reason}."
+				else:
+					summary_text = "Signals are mixed; treat as inconclusive and review manually."
 
 			results = {
 				'authenticity_score': authenticity_score,

@@ -39,9 +39,15 @@ def build_dataset(
 		fake_paths = fake_paths[:max_per_class]
 	X: List[List[float]] = []
 	y: List[int] = []
+	skipped_real_zero_blink = 0
 
 	for p in real_paths:
 		features = extract_features(p, frame_stride=frame_stride, ear_blink_threshold=ear_blink_threshold)
+		# Skip real samples with zero blink rate to avoid false negatives from failure to detect blinks
+		blink_rate = (features.video.avg_blink_rate_per_minute if features.video else 0.0) or 0.0
+		if blink_rate == 0.0:
+			skipped_real_zero_blink += 1
+			continue
 		X.append(features.to_feature_vector())
 		y.append(0)
 
@@ -50,6 +56,8 @@ def build_dataset(
 		X.append(features.to_feature_vector())
 		y.append(1)
 
+	if skipped_real_zero_blink:
+		print(f"Skipped {skipped_real_zero_blink} real samples with zero blink rate")
 	return np.asarray(X, dtype=float), np.asarray(y, dtype=int)
 
 
