@@ -12,7 +12,7 @@ backend/model.pkl
 backend/notreally.db
 backend/.venv/
 backend/uploads/
-backend/training_500.log
+backend/training_500_fs5.log
 
 
 # Large datasets
