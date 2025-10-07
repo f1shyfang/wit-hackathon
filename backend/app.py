@@ -118,6 +118,15 @@ def health_check():
 	"""Health check endpoint"""
 	return jsonify({'status': 'healthy', 'message': 'NotReal.ly API is running'})
 
+@app.route('/', methods=['GET'])
+def root():
+	"""Root endpoint for platform health checks"""
+	return jsonify({
+		'status': 'ok',
+		'service': 'NotReal.ly API',
+		'endpoints': ['/api/health', '/api/analyze', '/api/results/<job_id>']
+	})
+
 if __name__ == '__main__':
 	port = int(os.environ.get('PORT', '52513'))
 	app.run(host='0.0.0.0', debug=True, port=port)
