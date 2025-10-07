@@ -1,11 +1,11 @@
 Flask
 Flask-CORS
 python-dotenv
-opencv-python
-mediapipe
+opencv-python==4.8.1.78
+mediapipe==0.10.14
 librosa
 ffmpeg-python
-numpy
+numpy<2
 xgboost
 scikit-learn
 joblib
