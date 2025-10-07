@@ -2,7 +2,9 @@
 
 A comprehensive deepfake detection system built for hackathon demonstration, featuring a Next.js frontend and Flask backend with multi-modal AI analysis.
 
-## 🚀 Features
+## Test at https://notreally.vercel.app/
+
+##  Features
 
 - **Multi-Modal Analysis**: Combines facial feature analysis, audio processing, and metadata extraction
 - **Real-time Processing**: Fast analysis with live progress updates
@@ -10,7 +12,7 @@ A comprehensive deepfake detection system built for hackathon demonstration, fea
 - **Explainable AI**: Shows which features contributed to the authenticity score
 - **Modern UI**: Built with Next.js, TypeScript, and Tailwind CSS
 
-## 🏗️ Architecture
+##  Architecture
 
 ```
 wit-hackathon/
@@ -27,7 +29,7 @@ wit-hackathon/
 └── plan.md           # Detailed implementation plan
 ```
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ### Frontend
 - **Next.js 14** with App Router
@@ -150,14 +152,3 @@ This is a hackathon project, but contributions are welcome! Please:
 ## 📄 License
 
 This project is created for educational and hackathon purposes.
-
-## 🙏 Acknowledgments
-
-- MediaPipe team for facial analysis tools
-- XGBoost community for ML framework
-- Next.js team for the amazing React framework
-- All open-source contributors who made this possible
-
----
-
-**Built with ❤️ for the WIT Hackathon**
