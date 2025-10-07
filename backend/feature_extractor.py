@@ -405,10 +405,14 @@ def extract_metadata_features(video_path: str) -> Optional[MetadataStats]:
 # -----------------------------
 
 def extract_features(video_path: str, frame_stride: int = 5, ear_blink_threshold: float = 0.21) -> ExtractedFeatures:
-	video_stats = extract_video_features(video_path, frame_stride=frame_stride, ear_blink_threshold=ear_blink_threshold)
-	audio_stats = extract_audio_features(video_path)
-	metadata_stats = extract_metadata_features(video_path)
-	return ExtractedFeatures(video=video_stats, audio=audio_stats, metadata=metadata_stats)
+    video_stats = extract_video_features(video_path, frame_stride=frame_stride, ear_blink_threshold=ear_blink_threshold)
+    # Default: audio OFF unless explicitly enabled. Also honor legacy DISABLE flag.
+    enable_audio = os.environ.get("NOTREALLY_ENABLE_AUDIO", "").strip().lower() in {"1", "true", "yes", "on"}
+    legacy_disable = os.environ.get("NOTREALLY_DISABLE_AUDIO", "").strip().lower() in {"1", "true", "yes", "on"}
+    disable_audio = (not enable_audio) or legacy_disable
+    audio_stats = None if disable_audio else extract_audio_features(video_path)
+    metadata_stats = extract_metadata_features(video_path)
+    return ExtractedFeatures(video=video_stats, audio=audio_stats, metadata=metadata_stats)
 
 
 # -----------------------------

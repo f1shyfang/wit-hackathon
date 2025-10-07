@@ -78,7 +78,7 @@ export default function AnalysisDashboard({ result, onNewAnalysis }: AnalysisDas
   const featureData = [
     { name: 'Blink Rate', value: features.blink_rate, unit: 'blinks/min' },
     { name: 'Facial Jitter', value: features.facial_jitter, unit: 'variance' },
-    { name: 'Audio MFCC', value: features.audio_mfcc_variance, unit: 'variance' },
+    ...(features.audio_mfcc_variance !== undefined ? [{ name: 'Audio MFCC', value: features.audio_mfcc_variance, unit: 'variance' } as const] : []),
   ];
 
   const pieData = [
@@ -234,10 +234,10 @@ export default function AnalysisDashboard({ result, onNewAnalysis }: AnalysisDas
                   Audio MFCC Variance
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {features.audio_mfcc_variance.toFixed(3)}
+                  {features.audio_mfcc_variance !== undefined ? features.audio_mfcc_variance.toFixed(3) : 'N/A'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {features.audio_mfcc_variance < 0.3 ? 'Natural audio patterns' : 'Synthetic audio detected'}
+                  {features.audio_mfcc_variance === undefined ? 'Audio features disabled' : (features.audio_mfcc_variance < 0.3 ? 'Natural audio patterns' : 'Synthetic audio detected')}
                 </td>
               </tr>
             </tbody>
