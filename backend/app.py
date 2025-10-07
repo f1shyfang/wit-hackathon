@@ -13,7 +13,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Create uploads directory if it doesn't exist
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = os.environ.get('NOTREALLY_UPLOAD_DIR', 'uploads')
 if not os.path.exists(UPLOAD_FOLDER):
 	os.makedirs(UPLOAD_FOLDER)
 
@@ -119,4 +119,5 @@ def health_check():
 	return jsonify({'status': 'healthy', 'message': 'NotReal.ly API is running'})
 
 if __name__ == '__main__':
-	app.run(debug=True, port=52513)
+	port = int(os.environ.get('PORT', '52513'))
+	app.run(host='0.0.0.0', debug=True, port=port)

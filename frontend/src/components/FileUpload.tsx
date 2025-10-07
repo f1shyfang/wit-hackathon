@@ -64,7 +64,8 @@ export default function FileUpload({ onAnalysisStart, onAnalysisComplete }: File
 			const formData = new FormData();
 			formData.append('file', file);
 
-			const response = await axios.post('http://localhost:52513/api/analyze', formData, {
+			const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:52513';
+			const response = await axios.post(`${API_BASE_URL}/api/analyze`, formData, {
 				headers: {
 					'Content-Type': 'multipart/form-data',
 				},
@@ -79,10 +80,11 @@ export default function FileUpload({ onAnalysisStart, onAnalysisComplete }: File
 		}
 	};
 
-	const pollForResults = async (jobId: string) => {
+		const pollForResults = async (jobId: string) => {
 		const pollInterval = setInterval(async () => {
 			try {
-				const response = await axios.get(`http://localhost:52513/api/results/${jobId}`);
+					const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:52513';
+					const response = await axios.get(`${API_BASE_URL}/api/results/${jobId}`);
 				
 				if (response.data.status === 'completed') {
 					clearInterval(pollInterval);

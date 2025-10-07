@@ -24,7 +24,8 @@ export default function AnalysisDashboard({ result, onNewAnalysis }: AnalysisDas
     
     setIsRefreshing(true);
     try {
-      const response = await axios.get(`http://localhost:52513/api/results/${currentResult.job_id}`);
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:52513';
+      const response = await axios.get(`${API_BASE_URL}/api/results/${currentResult.job_id}`);
       setCurrentResult(response.data);
     } catch (error) {
       console.error('Failed to refresh results:', error);
