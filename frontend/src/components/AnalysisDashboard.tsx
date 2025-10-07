@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { RefreshCw, Download, Eye, AlertTriangle, CheckCircle } from 'lucide-react';
+import { RefreshCw, Eye, AlertTriangle, CheckCircle } from 'lucide-react';
 import { AnalysisResult } from '@/types/analysis';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import axios from 'axios';
@@ -71,7 +71,7 @@ export default function AnalysisDashboard({ result, onNewAnalysis }: AnalysisDas
     );
   }
 
-  const { authenticity_score, confidence, features, summary } = currentResult.results as any;
+  const { authenticity_score, confidence, features, summary } = currentResult.results as NonNullable<AnalysisResult['results']>;
 
   // Prepare data for charts
   const featureData = [
@@ -153,8 +153,8 @@ export default function AnalysisDashboard({ result, onNewAnalysis }: AnalysisDas
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip 
-                formatter={(value: number, name: string, props: any) => [
-                  `${value.toFixed(3)} ${props.payload.unit}`,
+                formatter={(value: number, name: string, item: { payload?: { unit?: string } }) => [
+                  `${value.toFixed(3)} ${item.payload?.unit ?? ''}`,
                   name
                 ]}
               />
