@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "52513:52513"
+    environment:
+      - NOTREALLY_DB_PATH=/tmp/notreally.db
+      - NOTREALLY_UPLOAD_DIR=/tmp/uploads
+      - PORT=52513
+    volumes:
+      # Mount model file as read-only
+      - ./backend/model.pkl:/app/model.pkl:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:52513/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
