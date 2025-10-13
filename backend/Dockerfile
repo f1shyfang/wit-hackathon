@@ -22,17 +22,13 @@ COPY . .
 # Create uploads directory
 RUN mkdir -p /tmp/uploads
 
-# Expose port
-EXPOSE 52513
-
 # Set environment variables
 ENV NOTREALLY_DB_PATH=/tmp/notreally.db
 ENV NOTREALLY_UPLOAD_DIR=/tmp/uploads
-ENV PORT=52513
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:52513/ || exit 1
+    CMD curl -f http://localhost:${PORT:-52513}/ || exit 1
 
 # Run the application
-CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:52513", "--workers", "1", "--threads", "4", "--timeout", "600"]
+CMD ["sh", "-c", "gunicorn app:app --bind 0.0.0.0:${PORT:-52513} --workers 1 --threads 4 --timeout 600"]

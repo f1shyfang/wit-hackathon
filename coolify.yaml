@@ -1,3 +1,4 @@
+# Coolify deployment configuration
 version: '3.8'
 
 services:
@@ -5,17 +6,13 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    ports:
-      - "52513:${PORT:-52513}"
     environment:
       - NOTREALLY_DB_PATH=/tmp/notreally.db
       - NOTREALLY_UPLOAD_DIR=/tmp/uploads
-      - PORT=${PORT:-52513}
-    volumes:
-      # Model file is already included in the Docker image
+      - PORT=${PORT}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-52513}/"]
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT}/"]
       interval: 30s
       timeout: 10s
       retries: 3
